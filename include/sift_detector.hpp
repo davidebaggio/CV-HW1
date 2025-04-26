@@ -30,6 +30,7 @@ private:
 	vector<vector<Point>> points = vector<vector<cv::Point>>(3);
 	vector<string> winning_file_names = vector<string>(3);
 
+	void optimize_image(Mat &src, bool isImg_test);
 	double compute_median(vector<double> values);
 	void save_points(vector<cv::DMatch> matches, Mat descriptors_1, vector<KeyPoint> keypoints_1, Mat descriptors_2, vector<KeyPoint> keypoints_2, string fileName, int category);
 	vector<DMatch> get_matches(const Mat &model_desc, const Mat &img_desc);

@@ -101,9 +101,6 @@ void orb_detector::compute_detection()
 
 						index++;
 
-						// cout <<"-----------------------------"<< endl;
-						// std::cout << "Image n. "  << index << " " << fileName << std::endl;
-
 						Mat descriptors_1;
 						vector<KeyPoint> keypoints_1;
 
@@ -160,35 +157,36 @@ void orb_detector::compute_detection()
 							best_descriptors = descriptors_1;
 							best_keypoints = keypoints_1;
 						}
+	
+						if (winning_matches.size() == 0)
+						{
+							cout << "No matches found for type " << i << " PALLE " << entry << endl;
+							continue;
+						}
 					}
-
-					if (winning_matches.size() == 0)
-					{
-						cout << "No matches found for type " << i << endl;
-						continue;
-					}
-
-					vector<double> xs;
-					vector<double> ys;
-					for (size_t i = 0; i < medians.size(); i++)
-					{
-						xs.push_back(medians[i].x);
-						ys.push_back(medians[i].y);
-					}
-
-					intermediate_medians[i] = medians;
-
-					int final_median_x = (int)compute_median(xs);
-					int final_median_y = (int)compute_median(ys);
-
-					Point final_center = Point(final_median_x, final_median_y);
-					medians_per_object[i] = final_center;
 				}
 				else
 				{
 					continue;
 				}
 			}
+
+			vector<double> xs;
+			vector<double> ys;
+			for (int i = 0; i < medians.size(); i++)
+			{
+				xs.push_back(medians[i].x);
+				ys.push_back(medians[i].y);
+			}
+
+			intermediate_medians[i] = medians;
+
+			int final_median_x = (int)compute_median(xs);
+			int final_median_y = (int)compute_median(ys);
+
+			Point final_center = Point(final_median_x, final_median_y);
+			medians_per_object[i] = final_center;
+
 			if (best_keypoints.empty())
 			{
 				cout << "No matches found for type " << i << endl;
@@ -264,7 +262,7 @@ void orb_detector::display_points()
 	waitKey(0);
 }
 
-/* int main()
+/*int main()
 {
 
 	Mat test = imread("../object_detection_dataset/035_power_drill/test_images/35_0010_001462-color.jpg");

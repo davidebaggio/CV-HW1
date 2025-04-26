@@ -1,5 +1,23 @@
 #include "sift_detector.hpp"
 
+void sift_detector::optimize_image(Mat& src, bool isImg_test) 
+{
+
+	Mat img_gray, img_filtered, img_equalized;
+	
+	cvtColor(src, img_gray, cv::COLOR_BGR2GRAY);
+
+	if(isImg_test)		
+		bilateralFilter(img_gray, img_filtered, 15, 100, 100);
+	else
+		bilateralFilter(img_gray, img_filtered, 9, 75, 75);
+
+	equalizeHist(img_filtered, img_equalized);
+
+	src = img_equalized.clone();
+}
+
+
 double sift_detector::compute_median(vector<double> values)
 {
 	sort(values.begin(), values.end());
@@ -43,7 +61,7 @@ vector<DMatch> sift_detector::get_matches(const Mat &model_desc, const Mat &img_
 	vector<DMatch> good_matches;
 	for (const auto &m : knn_matches)
 	{
-		if (m.size() == 2 && m[0].distance < 0.78f * m[1].distance)
+		if (m.size() == 2 && m[0].distance < 0.8f * m[1].distance)
 		{
 			good_matches.push_back(m[0]);
 		}
@@ -63,7 +81,7 @@ void sift_detector::compute_detection()
 
 	Mat img_opt = img_test.clone();
 
-	cvtColor(img_opt, img_opt, COLOR_BGR2GRAY);
+	optimize_image(img_opt, true);
 
 	vector<KeyPoint> img_kpt;
 	Mat img_desc;
@@ -110,7 +128,7 @@ void sift_detector::compute_detection()
 						Mat model_desc;
 						vector<KeyPoint> model_kpt;
 
-						cvtColor(model, model, COLOR_BGR2GRAY);
+						optimize_image(model, false);
 
 						sift->detect(model, model_kpt);
 						sift->compute(model, model_kpt, model_desc);
