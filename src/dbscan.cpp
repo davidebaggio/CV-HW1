@@ -1,16 +1,16 @@
 #include "dbscan.hpp"
 
-float euclideanDist(const Point &a, const Point &b)
+float euclidean_dist(const Point &a, const Point &b)
 {
 	return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
-vector<int> regionQuery(const vector<Point> &points, int idx, float eps)
+vector<int> region_query(const vector<Point> &points, int idx, float eps)
 {
 	vector<int> neighbors;
 	for (int i = 0; i < points.size(); ++i)
 	{
-		if (euclideanDist(points[idx], points[i]) <= eps)
+		if (euclidean_dist(points[idx], points[i]) <= eps)
 		{
 			neighbors.push_back(i);
 		}
@@ -18,10 +18,10 @@ vector<int> regionQuery(const vector<Point> &points, int idx, float eps)
 	return neighbors;
 }
 
-void expandCluster(const vector<Point> &points, vector<int> &labels,
-				   int idx, int clusterId, float eps, int minPts)
+void expand_cluster(const vector<Point> &points, vector<int> &labels,
+					int idx, int clusterId, float eps, int minPts)
 {
-	vector<int> seeds = regionQuery(points, idx, eps);
+	vector<int> seeds = region_query(points, idx, eps);
 	if (seeds.size() < minPts)
 	{
 		labels[idx] = -1; // noise
@@ -41,7 +41,7 @@ void expandCluster(const vector<Point> &points, vector<int> &labels,
 		else if (labels[current] == 0)
 		{
 			labels[current] = clusterId;
-			vector<int> result = regionQuery(points, current, eps);
+			vector<int> result = region_query(points, current, eps);
 			if (result.size() >= minPts)
 			{
 				seeds.insert(seeds.end(), result.begin(), result.end());
@@ -60,7 +60,7 @@ ClusterResult dbscan(const vector<Point> &points, float eps, int minPts)
 	{
 		if (labels[i] != 0)
 			continue;
-		expandCluster(points, labels, i, clusterId, eps, minPts);
+		expand_cluster(points, labels, i, clusterId, eps, minPts);
 		if (labels[i] == clusterId)
 			clusterId++;
 	}
@@ -90,7 +90,7 @@ ClusterResult dbscan(const vector<Point> &points, float eps, int minPts)
 	return result;
 }
 
-Rect getDensestClusterRect(const vector<Point> &points, float eps = 30.0, int minPts = 5)
+Rect get_dense_cluster(const vector<Point> &points, float eps = 30.0, int minPts = 5)
 {
 	ClusterResult result = dbscan(points, eps, minPts);
 
@@ -180,7 +180,7 @@ vector<Point> generateRandomPoints(int numClusters = 5, int pointsPerCluster = 1
 	int minPts = 3;
 
 	ClusterResult result = dbscan(points, eps, minPts);
-	Rect denseRect = getDensestClusterRect(points, eps, minPts);
+	Rect denseRect = get_dense_cluster(points, eps, minPts);
 
 	drawClusters(points, result, denseRect);
 
