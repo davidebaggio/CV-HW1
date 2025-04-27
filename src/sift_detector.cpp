@@ -19,7 +19,7 @@ void sift_detector::get_model_descriptors()
 				if (entry.is_regular_file())
 				{
 					string file_name = entry.path().filename().string();
-					string file_mask = fileName.substr(file_name.find_last_of("/") + 1);
+					string file_mask = file_name.substr(file_name.find_last_of("/") + 1);
 					file_mask = file_mask.substr(0, file_mask.find_last_of("_")) + "_mask.png";
 
 					// Check if the file name matches the regex pattern
