@@ -2,15 +2,6 @@
 
 orb_detector::orb_detector()
 {
-
-	Mat copy = test.clone();
-
-	vector<KeyPoint> keypoints;
-	Mat descriptors;
-
-	orb->detect(test, keypoints);
-	orb->compute(test, keypoints, descriptors);
-
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		try
@@ -88,7 +79,7 @@ double orb_detector::compute_median(vector<double> values)
 	}
 }
 
-vector<DMatch> orb_detector::get_matches(const Mat &model_descriptors,const Mat &test_descriptors)
+vector<DMatch> orb_detector::get_matches(const Mat &model_descriptors, const Mat &test_descriptors)
 {
 	BFMatcher matcher(NORM_HAMMING, true);
 	vector<DMatch> matches;
@@ -96,7 +87,6 @@ vector<DMatch> orb_detector::get_matches(const Mat &model_descriptors,const Mat 
 
 	return matches;
 }
-
 
 void orb_detector::save_points(vector<DMatch> matches, vector<KeyPoint> test_keypoints, int category)
 {
@@ -120,9 +110,8 @@ vector<vector<Point>> orb_detector::get_points()
 
 void orb_detector::compute_detection(Mat img)
 {
-
+	cvtColor(img, img, COLOR_BGR2GRAY);
 	this->test = img;
-
 
 	Mat copy = test.clone();
 
@@ -140,8 +129,6 @@ void orb_detector::compute_detection(Mat img)
 
 	for (int i = 0; i < models_path.size(); i++)
 	{
-		
-
 		int max_matches = 0;
 		string bestMatchFileName;
 		Mat best_descriptors;
@@ -162,10 +149,8 @@ void orb_detector::compute_detection(Mat img)
 			category = "power_drill";
 		}
 
-		for(int j = 0; j < model_descriptors[i].size(); j++)
+		for (int j = 0; j < model_descriptors[i].size(); j++)
 		{
-
-		
 			vector<DMatch> matches = get_matches(model_descriptors[i][j], test_descriptors);
 			if (matches.empty())
 			{
@@ -196,19 +181,18 @@ void orb_detector::compute_detection(Mat img)
 				winning_matches = matches;
 				max_matches = matches.size();
 				best_descriptors = model_descriptors[i][j];
-			}	
+			}
 		}
 
-		cout << "ORB: Best match for " << category << ": " << max_matches << endl;
+		// cout << "ORB: Best match for " << category << ": " << max_matches << endl;
 		if (max_matches == 0)
 		{
 			cout << "ORB: No matches found for type " << i << endl;
 			continue;
 		}
-		save_points(winning_matches,test_keypoints, i);
-			
+		save_points(winning_matches, test_keypoints, i);
 	}
-
+	cout << "Best matches found from ORB detector\n";
 }
 
 void orb_detector::display_points()
@@ -258,4 +242,3 @@ void orb_detector::display_points()
 	}
 	waitKey(0);
 }
-

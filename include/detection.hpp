@@ -26,9 +26,6 @@ bool is_white(cv::Vec3b pixel);
 bool is_red(cv::Vec3b pixel);
 bool is_blue(cv::Vec3b pixel);
 
-template <typename... is_color>
-std::vector<cv::Point> sample_vector(cv::Mat img, std::vector<cv::Point> points, is_color... col);
-
 float intersection_over_union(cv::Rect rect1, cv::Rect rect2);
 void display_performances();
 

@@ -4,14 +4,18 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenCV REQUIRED )
 set(LIB_SRC
 	src/dbscan.cpp
+	src/haar_detector.cpp
 	src/orb_detector.cpp
 	src/sift_detector.cpp
+	src/detection.cpp
 )
 
 set(HEADERS
 	include/dbscan.hpp
+	include/haar_detector.hpp
 	include/orb_detector.hpp
 	include/sift_detector.hpp
+	include/detection.hpp
 )
 
 add_library(image_lib STATIC ${LIB_SRC} ${HEADERS})
@@ -23,6 +27,7 @@ link_directories( ${CMAKE_BINARY_DIR}/bin )
 #add_executable( generate_annotations src/generate_annotations.cpp )
 #add_executable( detect_object src/detect_object.cpp )
 add_executable( test_images_detection src/test_images_detection.cpp )
+add_executable( performance src/performance.cpp )
 #add_executable( dbscan src/dbscan.cpp )
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -31,4 +36,5 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 #target_link_libraries(generate_annotations ${OpenCV_LIBS})
 #target_link_libraries(detect_object ${OpenCV_LIBS})
 target_link_libraries(test_images_detection image_lib ${OpenCV_LIBS})
+target_link_libraries(performance image_lib ${OpenCV_LIBS})
 #target_link_libraries(dbscan ${OpenCV_LIBS})
