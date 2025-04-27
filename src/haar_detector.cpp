@@ -1,3 +1,5 @@
+// created by Davide Baggio 2122547
+
 #include "haar_detector.hpp"
 
 haar_detector::haar_detector()

@@ -1,3 +1,5 @@
+// created by Davide Baggio 2122547
+
 #include "haar_detector.hpp"
 #include "orb_detector.hpp"
 #include "sift_detector.hpp"
@@ -5,6 +7,25 @@
 #include "detection.hpp"
 #include <random>
 
+/*
+ * Samples points from a given vector based on their pixel color in an image.
+ *
+ * Template Parameters:
+ * - is_color: One or more color-checking functions that accept a Vec3b and return a bool.
+ *
+ * Parameters:
+ * - img: The image to sample colors from.
+ * - points: Vector of points to be filtered.
+ * - around: If true, checks a 3x3 neighborhood around each point; otherwise, checks only the point itself.
+ * - col...: Variadic list of color-checking functions.
+ *
+ * Returns:
+ * - A vector of points that satisfy at least one of the color conditions.
+ *
+ * Behavior:
+ * - If `around` is true, all pixels in the 3x3 neighborhood must satisfy the color condition.
+ * - Otherwise, only the pixel at the point's location is checked.
+ */
 template <typename... is_color>
 vector<Point> sample_vector_by_color(Mat img, vector<Point> points, bool around, is_color... col)
 {
@@ -41,6 +62,20 @@ vector<Point> sample_vector_by_color(Mat img, vector<Point> points, bool around,
 	return sampled_points;
 }
 
+/*
+ * Samples points from multiple sets of points according to specified probability weights.
+ *
+ * Parameters:
+ * - points: A vector of vectors, where each inner vector contains points belonging to a category.
+ * - weights: A vector of probabilities (between 0 and 1) corresponding to each category.
+ *
+ * Returns:
+ * - A vector of sampled points based on the given weights.
+ *
+ * Behavior:
+ * - Each point is sampled with a probability equal to the weight of its corresponding category.
+ * - If the sizes of `points` and `weights` do not match, prints an error and returns an empty vector.
+ */
 vector<Point> sample_vector_by_weights(vector<vector<Point>> points, vector<double> weights)
 {
 	srand(time(NULL));
@@ -153,7 +188,7 @@ int main(int argc, char **argv)
 		d_total = sample_vector_by_color(img, d_total, false, is_red, is_dark);
 		d_total = sample_vector_by_weights({d_haar, d_orb, d_sift}, {0.5, 1.0, 0.5});
 
-		for (size_t i = 0; i < s_total.size(); i++)
+		/* for (size_t i = 0; i < s_total.size(); i++)
 		{
 			circle(img, s_total[i], 4, Scalar(255, 0, 0), 1);
 		}
@@ -164,7 +199,7 @@ int main(int argc, char **argv)
 		for (size_t i = 0; i < d_total.size(); i++)
 		{
 			circle(img, d_total[i], 4, Scalar(0, 0, 255), 1);
-		}
+		} */
 
 		float eps = 55.0f;
 		int minPts = 3;

@@ -1,3 +1,5 @@
+// created by Davide Baggio 2122547
+
 #include "dbscan.hpp"
 
 float euclidean_dist(const Point &a, const Point &b)
@@ -19,16 +21,16 @@ vector<int> region_query(const vector<Point> &points, int idx, float eps)
 }
 
 void expand_cluster(const vector<Point> &points, vector<int> &labels,
-					int idx, int clusterId, float eps, int minPts)
+					int idx, int cluster_id, float eps, int min_points)
 {
 	vector<int> seeds = region_query(points, idx, eps);
-	if (seeds.size() < minPts)
+	if (seeds.size() < min_points)
 	{
-		labels[idx] = -1; // noise
+		labels[idx] = -1;
 		return;
 	}
 
-	labels[idx] = clusterId;
+	labels[idx] = cluster_id;
 
 	size_t i = 0;
 	while (i < seeds.size())
@@ -36,13 +38,13 @@ void expand_cluster(const vector<Point> &points, vector<int> &labels,
 		int current = seeds[i];
 		if (labels[current] == -1)
 		{
-			labels[current] = clusterId;
+			labels[current] = cluster_id;
 		}
 		else if (labels[current] == 0)
 		{
-			labels[current] = clusterId;
+			labels[current] = cluster_id;
 			vector<int> result = region_query(points, current, eps);
-			if (result.size() >= minPts)
+			if (result.size() >= min_points)
 			{
 				seeds.insert(seeds.end(), result.begin(), result.end());
 			}
@@ -51,21 +53,21 @@ void expand_cluster(const vector<Point> &points, vector<int> &labels,
 	}
 }
 
-ClusterResult dbscan(const vector<Point> &points, float eps, int minPts)
+cluster_result dbscan(const vector<Point> &points, float eps, int min_points)
 {
-	vector<int> labels(points.size(), 0); // 0 = unvisited
-	int clusterId = 1;
+	vector<int> labels(points.size(), 0);
+	int cluster_id = 1;
 
 	for (int i = 0; i < points.size(); ++i)
 	{
 		if (labels[i] != 0)
 			continue;
-		expand_cluster(points, labels, i, clusterId, eps, minPts);
-		if (labels[i] == clusterId)
-			clusterId++;
+		expand_cluster(points, labels, i, cluster_id, eps, min_points);
+		if (labels[i] == cluster_id)
+			cluster_id++;
 	}
 
-	unordered_map<int, vector<Point>> clustersMap;
+	unordered_map<int, vector<Point>> cluster_map;
 	vector<Point> noise;
 
 	for (int i = 0; i < labels.size(); ++i)
@@ -76,12 +78,12 @@ ClusterResult dbscan(const vector<Point> &points, float eps, int minPts)
 		}
 		else
 		{
-			clustersMap[labels[i]].push_back(points[i]);
+			cluster_map[labels[i]].push_back(points[i]);
 		}
 	}
 
-	ClusterResult result;
-	for (const auto &entry : clustersMap)
+	cluster_result result;
+	for (const auto &entry : cluster_map)
 	{
 		result.clusters.push_back(entry.second);
 	}
@@ -90,21 +92,21 @@ ClusterResult dbscan(const vector<Point> &points, float eps, int minPts)
 	return result;
 }
 
-Rect get_dense_cluster(const vector<Point> &points, float eps = 30.0, int minPts = 5)
+Rect get_dense_cluster(const vector<Point> &points, float eps = 30.0, int min_points = 5)
 {
-	ClusterResult result = dbscan(points, eps, minPts);
+	cluster_result result = dbscan(points, eps, min_points);
 
 	if (result.clusters.empty())
 		return Rect();
 
-	size_t maxSize = 0;
+	size_t max_size = 0;
 	vector<Point> *densest = nullptr;
 
 	for (auto &cluster : result.clusters)
 	{
-		if (cluster.size() > maxSize)
+		if (cluster.size() > max_size)
 		{
-			maxSize = cluster.size();
+			max_size = cluster.size();
 			densest = &cluster;
 		}
 	}
@@ -112,13 +114,12 @@ Rect get_dense_cluster(const vector<Point> &points, float eps = 30.0, int minPts
 	return boundingRect(*densest);
 }
 
-void drawClusters(const vector<Point> &points, const ClusterResult &result, const Rect &densestBox)
+void draw_cluster(const vector<Point> &points, const cluster_result &result, const Rect &densest_box)
 {
 	Mat canvas(1200, 1200, CV_8UC3, Scalar(255, 255, 255));
 
 	RNG rng(12345);
 
-	// Draw clusters
 	for (const auto &cluster : result.clusters)
 	{
 		Scalar color(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
@@ -128,62 +129,41 @@ void drawClusters(const vector<Point> &points, const ClusterResult &result, cons
 		}
 	}
 
-	// Draw noise
 	for (const auto &pt : result.noise)
 	{
 		circle(canvas, pt, 3, Scalar(0, 0, 0), -1);
 	}
 
-	// Draw densest cluster rectangle
-	rectangle(canvas, densestBox, Scalar(0, 0, 255), 2);
+	rectangle(canvas, densest_box, Scalar(0, 0, 255), 2);
 
 	imshow("Clusters and Densest Area", canvas);
 	waitKey(0);
 }
 
-vector<Point> generateRandomPoints(int numClusters = 5, int pointsPerCluster = 100, int noisePoints = 50, int canvasSize = 1000)
+vector<Point> generate_random_points(int num_clusters = 5, int points_per_cluster = 100, int noise_points = 50, int canvas_size = 1000)
 {
 	vector<Point> points;
-	mt19937 rng(time(NULL)); // fixed seed for reproducibility
-	uniform_int_distribution<int> centerDist(100, canvasSize - 100);
-	normal_distribution<float> clusterSpread(0, 30); // spread of points in each cluster
-	uniform_int_distribution<int> noiseDist(0, canvasSize);
+	mt19937 rng(time(NULL));
+	uniform_int_distribution<int> center_dist(100, canvas_size - 100);
+	normal_distribution<float> cluster_spread(0, 30);
+	uniform_int_distribution<int> noise_dist(0, canvas_size);
 
-	// Generate clustered points
-	for (int c = 0; c < numClusters; ++c)
+	for (int c = 0; c < num_clusters; ++c)
 	{
-		int centerX = centerDist(rng);
-		int centerY = centerDist(rng);
-		for (int i = 0; i < pointsPerCluster; ++i)
+		int centerX = center_dist(rng);
+		int centerY = center_dist(rng);
+		for (int i = 0; i < points_per_cluster; ++i)
 		{
-			int x = static_cast<int>(centerX + clusterSpread(rng));
-			int y = static_cast<int>(centerY + clusterSpread(rng));
+			int x = static_cast<int>(centerX + cluster_spread(rng));
+			int y = static_cast<int>(centerY + cluster_spread(rng));
 			points.emplace_back(x, y);
 		}
 	}
 
-	// Generate noise points
-	for (int i = 0; i < noisePoints; ++i)
+	for (int i = 0; i < noise_points; ++i)
 	{
-		points.emplace_back(noiseDist(rng), noiseDist(rng));
+		points.emplace_back(noise_dist(rng), noise_dist(rng));
 	}
 
 	return points;
 }
-
-/* int main()
-{
-	// random points
-	vector<Point> points = generateRandomPoints();
-
-	float eps = 100.0f;
-	int minPts = 3;
-
-	ClusterResult result = dbscan(points, eps, minPts);
-	Rect denseRect = get_dense_cluster(points, eps, minPts);
-
-	drawClusters(points, result, denseRect);
-
-	cout << "Densest bounding box: " << denseRect << endl;
-	return 0;
-} */
