@@ -1,114 +1,19 @@
 #include "sift_detector.hpp"
 
-void sift_detector::optimize_image(Mat& src, bool isImg_test) 
+void sift_detector::get_model_descriptors()
 {
-
-	Mat img_gray, img_filtered, img_equalized;
-	
-	cvtColor(src, img_gray, cv::COLOR_BGR2GRAY);
-
-	if(isImg_test)		
-		bilateralFilter(img_gray, img_filtered, 15, 100, 100);
-	else
-		bilateralFilter(img_gray, img_filtered, 9, 75, 75);
-
-	equalizeHist(img_filtered, img_equalized);
-
-	src = img_equalized.clone();
-}
-
-
-double sift_detector::compute_median(vector<double> values)
-{
-	sort(values.begin(), values.end());
-	size_t n = values.size();
-	if (n % 2 == 0)
-	{
-		return (values[n / 2 - 1] + values[n / 2]) / 2.0;
-	}
-	else
-	{
-		return values[n / 2];
-	}
-}
-
-void sift_detector::save_points(vector<DMatch> matches, Mat descriptors_1, vector<KeyPoint> keypoints_1, Mat descriptors_2, vector<KeyPoint> keypoints_2, string fileName, int category)
-{
-	vector<Point> matches_points;
-
-	for (size_t i = 0; i < matches.size(); i++)
-	{
-		int idx1 = matches[i].queryIdx;
-		int idx2 = matches[i].trainIdx;
-
-		Point pt1 = keypoints_1[idx1].pt;
-		Point pt2 = keypoints_2[idx2].pt;
-
-		matches_points.push_back(pt2);
-	}
-	winning_file_names[category] = fileName;
-	points[category] = matches_points;
-}
-
-vector<DMatch> sift_detector::get_matches(const Mat &model_desc, const Mat &img_desc)
-{
-	// Matcher con knnMatch
-	FlannBasedMatcher matcher;
-	vector<vector<DMatch>> knn_matches;						// Vettore di vettori per knnMatch
-	matcher.knnMatch(model_desc, img_desc, knn_matches, 2); // k=2 per il test di Lowe
-
-	// Lowe's Ratio Test
-	vector<DMatch> good_matches;
-	for (const auto &m : knn_matches)
-	{
-		if (m.size() == 2 && m[0].distance < 0.8f * m[1].distance)
-		{
-			good_matches.push_back(m[0]);
-		}
-	}
-
-	return good_matches;
-}
-
-sift_detector::sift_detector(Mat img)
-{
-	this->img_test = img;
-	sift = SIFT::create();
-}
-
-void sift_detector::compute_detection()
-{
-
-	Mat img_opt = img_test.clone();
-
-	optimize_image(img_opt, true);
-
-	vector<KeyPoint> img_kpt;
-	Mat img_desc;
-
-	sift->detect(img_opt, img_kpt);
-	sift->compute(img_opt, img_kpt, img_desc);
-
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		try
 		{
 			regex regexPattern(pattern);
-			int index = 0;
 
 			Mat model;
-
-			int max_matches = 0;
-			string bestMatchFileName;
-			Mat best_descriptors;
-			vector<KeyPoint> best_keypoints;
-			vector<DMatch> winning_matches;
 
 			for (const auto &entry : directory_iterator(models_path[i]))
 			{
 				if (entry.is_regular_file())
 				{
-
 					string fileName = entry.path().filename().string();
 
 					if (regex_match(fileName, regexPattern))
@@ -123,8 +28,6 @@ void sift_detector::compute_detection()
 							continue;
 						}
 
-						index++;
-
 						Mat model_desc;
 						vector<KeyPoint> model_kpt;
 
@@ -133,105 +36,116 @@ void sift_detector::compute_detection()
 						sift->detect(model, model_kpt);
 						sift->compute(model, model_kpt, model_desc);
 
-						string category;
-						if (i == 0)
-						{
-							category = "sugar_box";
-						}
-						else if (i == 1)
-						{
-							category = "mustard_bottle";
-						}
-						else if (i == 2)
-						{
-							category = "power_drill";
-						}
-						vector<DMatch> matches = get_matches(model_desc, img_desc);
-
-						if (matches.size() > max_matches)
-						{
-							winning_matches = matches;
-							max_matches = matches.size();
-							bestMatchFileName = fullFileName;
-							best_descriptors = model_desc;
-							best_keypoints = model_kpt;
-						}
+						model_descriptors[i].push_back(model_desc);
 					}
 				}
 			}
-
-			save_points(winning_matches, best_descriptors, best_keypoints, img_desc, img_kpt, bestMatchFileName, i);
-
-			cout << "Best match for type " << i << " is: " << bestMatchFileName << " with " << max_matches << " matches." << endl;
-			cout << "-----------------------------" << endl;
 		}
 		catch (const exception &e)
 		{
 			cerr << "Error: " << e.what() << endl;
-		}
+		}	
 	}
 }
 
-void sift_detector::display_points()
+
+void sift_detector::optimize_image(Mat& src, bool isImg_test) 
 {
-	vector<Mat> mat_matches = vector<Mat>(3);
-	mat_matches[0] = img_test.clone(); // sugar
-	mat_matches[1] = img_test.clone(); // mustard
-	mat_matches[2] = img_test.clone(); // drill
 
-	for (size_t i = 0; i < points.size(); i++)
+	Mat img_gray, img_equalized;
+	
+	cvtColor(src, img_gray, cv::COLOR_BGR2GRAY);
+
+	/*
+	if(isImg_test)		
+		bilateralFilter(img_gray, img_filtered, 5, 50, 50);
+	else
+		bilateralFilter(img_gray, img_filtered, 5, 50, 50);
+	*/
+
+	equalizeHist(img_gray, img_equalized);
+
+	src = img_equalized.clone();
+}
+
+void sift_detector::save_points(vector<DMatch>& matches, vector<KeyPoint>& img_kpt, int category)
+{
+	vector<Point> matches_points;
+
+	for (size_t i = 0; i < matches.size(); i++)
 	{
+		int i_img_point = matches[i].trainIdx;
 
-		for (int j = 0; j < points[i].size(); j++)
+		Point img_point = img_kpt[i_img_point].pt;
+
+		matches_points.push_back(img_point);
+	}
+
+	points[category] = matches_points;
+}
+
+vector<DMatch> sift_detector::get_matches(const Mat& model_desc, const Mat& img_desc)
+{
+	// Matcher con knnMatch
+	FlannBasedMatcher matcher;
+	vector<vector<DMatch>> knn_matches;						// Vettore di vettori per knnMatch
+	matcher.knnMatch(model_desc, img_desc, knn_matches, 2); // k=2 per il test di Lowe
+
+	// Lowe's Ratio Test
+	vector<DMatch> good_matches;
+	for (const auto &m : knn_matches)
+	{
+		if (m.size() == 2 && m[0].distance < 0.83f * m[1].distance)
 		{
-			Point pt = points[i][j];
-			circle(mat_matches[i], pt, 5, Scalar(0, 255, 0), 2);
+			good_matches.push_back(m[0]);
 		}
 	}
 
-	for (int i = 0; i < mat_matches.size(); i++)
+	return good_matches;
+}
+
+sift_detector::sift_detector()
+{
+	sift = SIFT::create();
+	get_model_descriptors();
+}
+
+void sift_detector::compute_detection(Mat& img_test)
+{
+	Mat img_opt = img_test.clone();	
+	optimize_image(img_opt, true);
+
+	vector<KeyPoint> img_kpt;
+	Mat img_desc;
+
+	sift->detect(img_opt, img_kpt);
+	sift->compute(img_opt, img_kpt, img_desc);
+
+	
+	vector<DMatch> winning_matches;
+
+	for (int i = 0; i < model_descriptors.size(); i++)
 	{
-		string category;
-		if (i == 0)
+		int max_matches = 0;
+		for(int j = 0; j < model_descriptors[i].size(); j++)
 		{
-			category = "sugar_box";
+			vector<DMatch> matches = get_matches(model_descriptors[i][j], img_desc);
+
+			if (matches.size() > max_matches)
+			{
+				winning_matches = matches;
+				max_matches = matches.size();
+			}
 		}
-		else if (i == 1)
-		{
-			category = "mustard_bottle";
-		}
-		else if (i == 2)
-		{
-			category = "power_drill";
-		}
-		imshow(category + " matches", mat_matches[i]);
+
+		save_points(winning_matches, img_kpt, i);
+
+		cout << "Best match for type " << i << " matches: " << max_matches << endl;
+		cout << "-----------------------------" << endl;
 	}
-	waitKey(0);
 }
 
 vector<vector<Point>> sift_detector::get_points()
 {
 	return points;
 }
-
-/* int main()
-{
-
-	// Load the image
-	Mat test = imread("object_detection_dataset/035_power_drill/test_images/35_0010_001462-color.jpg");
-
-	if (test.rows == 0 && test.cols == 0)
-	{
-		cerr << "Error: Could not open image file: " << "../object_detection_dataset/004_sugar_box/test.png" << endl;
-		return -1;
-	}
-
-	sift_Detector detector(test);
-
-	detector.computeDetection();
-	detector.displayPoints();
-
-	waitKey(0);
-
-	return 0;
-} */
