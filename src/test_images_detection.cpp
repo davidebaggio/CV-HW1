@@ -3,6 +3,7 @@
 #include "sift_detector.hpp"
 #include "dbscan.hpp"
 #include "detection.hpp"
+#include <random>
 
 template <typename... is_color>
 vector<Point> sample_vector_by_color(Mat img, vector<Point> points, is_color... col)
@@ -20,13 +21,27 @@ vector<Point> sample_vector_by_color(Mat img, vector<Point> points, is_color... 
 
 vector<Point> sample_vector_by_weights(vector<vector<Point>> points, vector<double> weights)
 {
+	srand(time(NULL));
 	if (points.size() != weights.size())
 	{
 		cout << "[ERROR]: points and weights must have the same size" << endl;
 		return vector<Point>();
 	}
 	vector<Point> sampled_points;
-	return vector<Point>();
+
+	for (size_t i = 0; i < weights.size(); i++)
+	{
+		for (size_t j = 0; j < points[i].size(); j++)
+		{
+			float random = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+			if (random < weights[i])
+			{
+				sampled_points.push_back(points[i][j]);
+			}
+		}
+	}
+
+	return sampled_points;
 }
 
 int main(int argc, char **argv)
@@ -79,14 +94,16 @@ int main(int argc, char **argv)
 		s_haar = cascade_sugar.detect(img);
 		m_haar = cascade_mustard.detect(img);
 		d_haar = cascade_drill.detect(img);
+		cout << "Best matches found from HAAR detector\n";
 
 		// detection ORB
 		vector<Point> s_orb, m_orb, d_orb;
 		orb.compute_detection(img);
-		vector<vector<Point>> s_orb_points = orb.get_points();
+		vector<vector<Point>> s_orb_points = orb.get_points(0.2);
 		s_orb = s_orb_points[0];
 		m_orb = s_orb_points[1];
 		d_orb = s_orb_points[2];
+		orb.display_points();
 
 		// detection SIFT
 		vector<Point> s_sift, m_sift, d_sift;
@@ -101,19 +118,22 @@ int main(int argc, char **argv)
 		s_total.insert(s_total.end(), s_haar.begin(), s_haar.end());
 		s_total.insert(s_total.end(), s_orb.begin(), s_orb.end());
 		s_total.insert(s_total.end(), s_sift.begin(), s_sift.end());
-		s_total = sample_vector_by_color(img, s_total, is_yellow, is_white, is_dark);
+		// s_total = sample_vector_by_color(img, s_total, is_yellow, is_white, is_dark);
+		s_total = sample_vector_by_weights({s_haar, s_orb, s_sift}, {1.0, 1.0, 1.0});
 		vector<Point> m_total;
 		m_total.insert(m_total.end(), m_haar.begin(), m_haar.end());
 		m_total.insert(m_total.end(), m_orb.begin(), m_orb.end());
 		m_total.insert(m_total.end(), m_sift.begin(), m_sift.end());
-		m_total = sample_vector_by_color(img, m_total, is_yellow, is_white, is_blue);
+		// m_total = sample_vector_by_color(img, m_total, is_yellow, is_white, is_blue);
+		m_total = sample_vector_by_weights({m_haar, m_orb, m_sift}, {1.0, 1.0, 1.0});
 		vector<Point> d_total;
 		d_total.insert(d_total.end(), d_haar.begin(), d_haar.end());
 		d_total.insert(d_total.end(), d_orb.begin(), d_orb.end());
 		d_total.insert(d_total.end(), d_sift.begin(), d_sift.end());
-		d_total = sample_vector_by_color(img, d_total, is_red, is_dark);
+		// d_total = sample_vector_by_color(img, d_total, is_red, is_dark);
+		d_total = sample_vector_by_weights({d_haar, d_orb, d_sift}, {1.0, 1.0, 1.0});
 
-		/* for (size_t i = 0; i < s_total.size(); i++)
+		for (size_t i = 0; i < s_total.size(); i++)
 		{
 			circle(img, s_total[i], 4, Scalar(255, 0, 0), 1);
 		}
@@ -124,9 +144,9 @@ int main(int argc, char **argv)
 		for (size_t i = 0; i < d_total.size(); i++)
 		{
 			circle(img, d_total[i], 4, Scalar(0, 0, 255), 1);
-		} */
+		}
 
-		float eps = 80.0f;
+		float eps = 40.0f;
 		int minPts = 3;
 
 		Rect dense_s = get_dense_cluster(s_total, eps, minPts);
@@ -157,13 +177,11 @@ int main(int argc, char **argv)
 		file << drill.substr(0, drill.size() - 1) << " " << dense_d.x << " " << dense_d.y << " " << dense_d.x + dense_d.width << " " << dense_d.y + dense_d.height;
 		file.close();
 
-		/* imshow("img", img);
-		waitKey(0); */
+		imshow("img", img);
+		waitKey(0);
 
 		cout << "--------------------------------------------------\n";
 	}
-
-	display_performances();
 
 	return 0;
 }

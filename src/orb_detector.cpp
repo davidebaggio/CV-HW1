@@ -10,6 +10,7 @@ orb_detector::orb_detector()
 			int index = 0;
 
 			Mat src;
+			Mat mask;
 
 			int max_matches = 0;
 			string bestMatchFileName;
@@ -25,14 +26,18 @@ orb_detector::orb_detector()
 
 					std::string fileName = entry.path().filename().string();
 
+					string file_mask = fileName.substr(fileName.find_last_of("/") + 1);
+					file_mask = file_mask.substr(0, file_mask.find_last_of("_")) + "_mask.png";
+
 					if (std::regex_match(fileName, regexPattern))
 					{
 						std::string fullFileName = models_path[i] + "/" + entry.path().filename().string();
 						src = imread(fullFileName);
+						mask = imread(models_path[i] + "/" + file_mask, IMREAD_GRAYSCALE);
 
-						if (src.rows == 0 && src.cols == 0)
+						if (src.empty() || mask.empty())
 						{
-							std::cerr << "Error: Could not open image file: " << fileName << std::endl;
+							std::cerr << "[ERROR]: Could not open image file: " << fileName << std::endl;
 							continue;
 						}
 
@@ -46,7 +51,7 @@ orb_detector::orb_detector()
 						Mat gray_frame;
 						cvtColor(src, gray_frame, COLOR_BGR2GRAY);
 
-						orb->detect(gray_frame, keypoints_1);
+						orb->detect(gray_frame, keypoints_1, mask);
 						orb->compute(gray_frame, keypoints_1, descriptors_1);
 
 						model_descriptors[i].push_back(descriptors_1);
@@ -108,9 +113,26 @@ vector<vector<Point>> orb_detector::get_points()
 	return points;
 }
 
+vector<vector<Point>> orb_detector::get_points(float perc)
+{
+	vector<vector<Point>> best_points;
+	for (size_t j = 0; j < points.size(); j++)
+	{
+		cout << points[j].size() << endl;
+		int max_index = points[j].size() * perc;
+		vector<Point> best_single_vector;
+		for (int i = 0; i < max_index; i++)
+		{
+			best_single_vector.push_back(points[j][i]);
+		}
+		cout << best_single_vector.size() << endl;
+		best_points.push_back(best_single_vector);
+	}
+	return best_points;
+}
+
 void orb_detector::compute_detection(Mat img)
 {
-	cvtColor(img, img, COLOR_BGR2GRAY);
 	this->test = img;
 
 	Mat copy = test.clone();
@@ -152,6 +174,7 @@ void orb_detector::compute_detection(Mat img)
 		for (int j = 0; j < model_descriptors[i].size(); j++)
 		{
 			vector<DMatch> matches = get_matches(model_descriptors[i][j], test_descriptors);
+
 			if (matches.empty())
 			{
 				cout << "ORB: No matches found for type " << i << endl;
@@ -162,18 +185,6 @@ void orb_detector::compute_detection(Mat img)
 			{
 				cout << "ORB: Image matches below minimum threshold: " << matches.size() << endl;
 				continue;
-			}
-
-			vector<double> xs;
-			vector<double> ys;
-
-			for (size_t i = 0; i < matches.size(); i++)
-			{
-				int idx2 = matches[i].trainIdx;
-				Point pt2 = test_keypoints[idx2].pt;
-
-				xs.push_back(pt2.x);
-				ys.push_back(pt2.y);
 			}
 
 			if (matches.size() > max_matches)
@@ -190,6 +201,8 @@ void orb_detector::compute_detection(Mat img)
 			cout << "ORB: No matches found for type " << i << endl;
 			continue;
 		}
+		sort(winning_matches.begin(), winning_matches.end(), [](const DMatch &a, const DMatch &b)
+			 { return a.distance < b.distance; });
 		save_points(winning_matches, test_keypoints, i);
 	}
 	cout << "Best matches found from ORB detector\n";
@@ -197,22 +210,29 @@ void orb_detector::compute_detection(Mat img)
 
 void orb_detector::display_points()
 {
+	display_points(1.0);
+}
+
+void orb_detector::display_points(float perc)
+{
 
 	vector<Mat> mat_matches = vector<Mat>(3);
 	mat_matches[0] = test.clone(); // sugar
 	mat_matches[1] = test.clone(); // mustard
 	mat_matches[2] = test.clone(); // drill
 
-	for (size_t i = 0; i < points.size(); i++)
+	vector<vector<Point>> pp = get_points(perc);
+
+	for (size_t i = 0; i < pp.size(); i++)
 	{
 		if (points[i].size() == 0)
 		{
 			cout << "ORB: No points found for type " << i << endl;
 			continue;
 		}
-		for (int j = 0; j < points[i].size(); j++)
+		for (int j = 0; j < pp[i].size(); j++)
 		{
-			Point pt = points[i][j];
+			Point pt = pp[i][j];
 			circle(mat_matches[i], pt, 5, Scalar(0, 255, 0), 2);
 		}
 	}
