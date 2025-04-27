@@ -98,7 +98,7 @@ vector<DMatch> sift_detector::get_matches(const Mat &model_desc, const Mat &img_
 	vector<DMatch> good_matches;
 	for (const auto &m : knn_matches)
 	{
-		if (m.size() == 2 && m[0].distance < 0.88f * m[1].distance)
+		if (m.size() == 2 && m[0].distance < 1.0f * m[1].distance)
 		{
 			good_matches.push_back(m[0]);
 		}

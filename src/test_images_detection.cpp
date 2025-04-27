@@ -109,48 +109,49 @@ int main(int argc, char **argv)
 		cascade.compute_detection(img);
 		vector<vector<Point>> s_haar_points = cascade.get_points();
 		s_haar = s_haar_points[0];
-		s_haar = sample_vector_by_color(img, s_haar, true, is_yellow, is_white);
+		s_haar = sample_vector_by_color(img, s_haar, false, is_yellow, is_white);
 		m_haar = s_haar_points[1];
+		s_haar = sample_vector_by_color(img, s_haar, false, is_yellow, is_white);
 		d_haar = s_haar_points[2];
-		cascade.display_points();
+		// cascade.display_points();
 
 		// detection ORB
 		vector<Point> s_orb, m_orb, d_orb;
 		orb.compute_detection(img);
-		vector<vector<Point>> s_orb_points = orb.get_points(0.3);
+		vector<vector<Point>> s_orb_points = orb.get_points(0.4);
 		s_orb = s_orb_points[0];
 		m_orb = s_orb_points[1];
 		d_orb = s_orb_points[2];
-		orb.display_points(0.3);
+		// orb.display_points(1);
 
 		// detection SIFT
 		vector<Point> s_sift, m_sift, d_sift;
 		sift.compute_detection(img);
-		vector<vector<Point>> s_sift_points = sift.get_points(0.4);
+		vector<vector<Point>> s_sift_points = sift.get_points(0.3);
 		s_sift = s_sift_points[0];
 		m_sift = s_sift_points[1];
 		d_sift = s_sift_points[2];
-		sift.display_points(0.4);
+		// sift.display_points(1);
 
 		// concatenate all detected points
 		vector<Point> s_total;
 		s_total.insert(s_total.end(), s_haar.begin(), s_haar.end());
 		s_total.insert(s_total.end(), s_orb.begin(), s_orb.end());
 		s_total.insert(s_total.end(), s_sift.begin(), s_sift.end());
-		// s_total = sample_vector_by_color(img, s_total, false, is_yellow, is_white, is_dark);
-		s_total = sample_vector_by_weights({s_haar, s_orb, s_sift}, {1.0, 1.0, 1.0});
+		s_total = sample_vector_by_color(img, s_total, false, is_yellow, is_white, is_dark);
+		s_total = sample_vector_by_weights({s_haar, s_orb, s_sift}, {0.5, 1.0, 0.5});
 		vector<Point> m_total;
 		m_total.insert(m_total.end(), m_haar.begin(), m_haar.end());
 		m_total.insert(m_total.end(), m_orb.begin(), m_orb.end());
 		m_total.insert(m_total.end(), m_sift.begin(), m_sift.end());
-		// m_total = sample_vector_by_color(img, m_total, false, is_yellow, is_white, is_blue);
-		m_total = sample_vector_by_weights({m_haar, m_orb, m_sift}, {1.0, 1.0, 1.0});
+		m_total = sample_vector_by_color(img, m_total, false, is_yellow, is_white, is_blue);
+		m_total = sample_vector_by_weights({m_haar, m_orb, m_sift}, {0.5, 1.0, 0.5});
 		vector<Point> d_total;
 		d_total.insert(d_total.end(), d_haar.begin(), d_haar.end());
 		d_total.insert(d_total.end(), d_orb.begin(), d_orb.end());
 		d_total.insert(d_total.end(), d_sift.begin(), d_sift.end());
-		// d_total = sample_vector_by_color(img, d_total, false, is_red, is_dark);
-		d_total = sample_vector_by_weights({d_haar, d_orb, d_sift}, {1.0, 1.0, 1.0});
+		d_total = sample_vector_by_color(img, d_total, false, is_red, is_dark);
+		d_total = sample_vector_by_weights({d_haar, d_orb, d_sift}, {0.5, 1.0, 0.5});
 
 		for (size_t i = 0; i < s_total.size(); i++)
 		{
@@ -165,7 +166,7 @@ int main(int argc, char **argv)
 			circle(img, d_total[i], 4, Scalar(0, 0, 255), 1);
 		}
 
-		float eps = 42.0f;
+		float eps = 55.0f;
 		int minPts = 3;
 
 		Rect dense_s = get_dense_cluster(s_total, eps, minPts);
@@ -196,11 +197,14 @@ int main(int argc, char **argv)
 		file << drill.substr(0, drill.size() - 1) << " " << dense_d.x << " " << dense_d.y << " " << dense_d.x + dense_d.width << " " << dense_d.y + dense_d.height;
 		file.close();
 
-		imshow("img", img);
-		waitKey(0);
+		/* imshow("img", img);
+		waitKey(0); */
 
 		cout << "--------------------------------------------------\n";
 	}
 
 	return 0;
 }
+
+// 8: haar (color correction) orb 0.4 sift 0.5 eps 50
+// 9: haar (color correction) orb 0.4 sift 0.5 eps 55

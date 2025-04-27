@@ -99,3 +99,13 @@ void haar_detector::display_points()
 	}
 	waitKey(0);
 }
+
+void haar_detector::set_points(vector<Point> points, size_t index)
+{
+	if (index < 0 || index > 3)
+	{
+		cout << "[ERROR]: invalid index for insertion\n";
+		return;
+	}
+	this->points[index] = points;
+}

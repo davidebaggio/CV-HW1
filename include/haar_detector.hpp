@@ -22,6 +22,7 @@ private:
 
 public:
 	haar_detector();
+	void set_points(vector<Point> points, size_t index);
 	void compute_detection(Mat img);
 	vector<vector<Point>> get_points();
 	void display_points();

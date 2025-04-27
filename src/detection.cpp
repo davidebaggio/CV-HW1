@@ -8,27 +8,27 @@ string get_filename(string path)
 
 bool is_yellow(Vec3b pixel)
 {
-	return (pixel[0] < 30 && pixel[1] > 110 && pixel[2] > 110);
+	return (pixel[0] < 30 && pixel[1] > 90 && pixel[2] > 90);
 }
 
 bool is_dark(Vec3b pixel)
 {
-	return (pixel[0] < 30 && pixel[1] < 30 && pixel[2] < 30);
+	return (pixel[0] < 40 && pixel[1] < 40 && pixel[2] < 40);
 }
 
 bool is_white(Vec3b pixel)
 {
-	return (pixel[0] > 190 && pixel[1] > 190 && pixel[2] > 190);
+	return (pixel[0] > 180 && pixel[1] > 180 && pixel[2] > 180);
 }
 
 bool is_red(Vec3b pixel)
 {
-	return (pixel[0] < 30 && pixel[1] < 30 && pixel[2] > 190);
+	return (pixel[0] < 40 && pixel[1] < 40 && pixel[2] > 180);
 }
 
 bool is_blue(Vec3b pixel)
 {
-	return (pixel[0] > 190 && pixel[1] < 30 && pixel[2] < 30);
+	return (pixel[0] > 180 && pixel[1] < 40 && pixel[2] < 40);
 }
 
 float intersection_over_union(Rect rect1, Rect rect2)
@@ -64,7 +64,7 @@ void display_performances()
 				continue;
 
 			ifstream label_file(true_labels[i]);
-			ifstream tested_file(tested_annotations[i]);
+			ifstream tested_file(tested_annotations[j]);
 
 			if (!label_file.is_open() || !tested_file.is_open())
 			{
@@ -113,7 +113,6 @@ void display_performances()
 				tested_file.clear();
 				tested_file.seekg(0, ios::beg);
 			}
-
 			label_file.close();
 			tested_file.close();
 		}
