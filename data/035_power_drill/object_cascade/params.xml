@@ -8,7 +8,7 @@
   <stageParams>
     <boostType>GAB</boostType>
     <minHitRate>0.99900001287460327</minHitRate>
-    <maxFalseAlarm>0.30000001192092896</maxFalseAlarm>
+    <maxFalseAlarm>0.15000000596046448</maxFalseAlarm>
     <weightTrimRate>0.94999999999999996</weightTrimRate>
     <maxDepth>1</maxDepth>
     <maxWeakCount>100</maxWeakCount></stageParams>

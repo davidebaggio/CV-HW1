@@ -113,8 +113,10 @@ sift_detector::sift_detector()
 	get_model_descriptors();
 }
 
-void sift_detector::compute_detection(Mat &img_test)
+void sift_detector::compute_detection(Mat img_test)
 {
+	this->img_test = img_test;
+
 	Mat img_opt = img_test.clone();
 	optimize_image(img_opt, true);
 
@@ -143,9 +145,10 @@ void sift_detector::compute_detection(Mat &img_test)
 			 { return a.distance < b.distance; });
 		save_points(winning_matches, img_kpt, i);
 
-		cout << "Best match for type " << i << " matches: " << max_matches << endl;
-		cout << "-----------------------------" << endl;
+		// cout << "Best match for type " << i << " matches: " << max_matches << endl;
+		// cout << "-----------------------------" << endl;
 	}
+	cout << "Best matches found from SIFT detector\n";
 }
 
 vector<vector<Point>> sift_detector::get_points()
@@ -158,14 +161,12 @@ vector<vector<Point>> sift_detector::get_points(float perc)
 	vector<vector<Point>> best_points;
 	for (size_t j = 0; j < points.size(); j++)
 	{
-		cout << points[j].size() << endl;
 		int max_index = points[j].size() * perc;
 		vector<Point> best_single_vector;
 		for (int i = 0; i < max_index; i++)
 		{
 			best_single_vector.push_back(points[j][i]);
 		}
-		cout << best_single_vector.size() << endl;
 		best_points.push_back(best_single_vector);
 	}
 	return best_points;
@@ -178,7 +179,6 @@ void sift_detector::display_points()
 
 void sift_detector::display_points(float perc)
 {
-
 	vector<Mat> mat_matches = vector<Mat>(3);
 	mat_matches[0] = img_test.clone(); // sugar
 	mat_matches[1] = img_test.clone(); // mustard
@@ -190,7 +190,7 @@ void sift_detector::display_points(float perc)
 	{
 		if (points[i].size() == 0)
 		{
-			cout << "ORB: No points found for type " << i << endl;
+			cout << "SIFT: No points found for type " << i << endl;
 			continue;
 		}
 		for (int j = 0; j < pp[i].size(); j++)
@@ -218,7 +218,7 @@ void sift_detector::display_points(float perc)
 		}
 		if (mat_matches[i].empty())
 		{
-			cout << "ORB: No matches found for type " << i << endl;
+			cout << "SIFT: No matches found for type " << i << endl;
 			continue;
 		}
 		imshow(category + " matches", mat_matches[i]);

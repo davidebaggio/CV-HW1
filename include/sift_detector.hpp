@@ -41,7 +41,7 @@ public:
 	sift_detector();
 	vector<vector<Point>> get_points();
 	vector<vector<Point>> get_points(float perc);
-	void compute_detection(Mat &img_test);
+	void compute_detection(Mat img_test);
 	void display_points();
 	void display_points(float perc);
 };
