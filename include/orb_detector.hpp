@@ -27,20 +27,22 @@ private:
 
 	vector<vector<Point>> points = vector<vector<Point>>(3);
 
-	vector<string> winning_file_names = vector<string>(3);
+	// vector<string> winning_file_names = vector<string>(3);
 
-	vector<Point> medians_per_object = vector<Point>(3);
+	// vector<Point> medians_per_object = vector<Point>(3);
 
-	vector<vector<Point>> intermediate_medians = vector<vector<Point>>(3);
+	// vector<vector<Point>> intermediate_medians = vector<vector<Point>>(3);
+
+	vector<vector<Mat>> model_descriptors = vector<vector<Mat>>(3);
 
 	double compute_median(vector<double> values);
-	vector<DMatch> get_matches(const Mat &descriptors_1, const vector<KeyPoint> &keypoints_1, const Mat &descriptors_2, const vector<KeyPoint> &keypoints_2);
-	void save_points(vector<DMatch> matches, Mat descriptors_1, vector<KeyPoint> keypoints_1, Mat descriptors_2, vector<KeyPoint> keypoints_2, string fileName, int category);
+	vector<DMatch> get_matches(const Mat &model_descriptors,const Mat &test_descriptors);
+	void save_points(vector<DMatch> matches, vector<KeyPoint> test_keypoints, int category);
 
 public:
-	orb_detector(Mat img);
+	orb_detector();
 	vector<vector<Point>> get_points();
-	void compute_detection();
+	void compute_detection(Mat img);
 	void display_points();
 };
 
