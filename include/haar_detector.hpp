@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include "detection.hpp"
 
 using namespace std;
 using namespace cv;
@@ -11,11 +12,19 @@ using namespace cv;
 class haar_detector
 {
 private:
-	CascadeClassifier cascade;
+	Mat test;
+
+	CascadeClassifier cascade_sugar;
+	CascadeClassifier cascade_mustard;
+	CascadeClassifier cascade_drill;
+
+	vector<vector<Point>> points = vector<vector<Point>>(3);
 
 public:
-	haar_detector(string cascade_path);
-	vector<Point> detect(Mat img);
+	haar_detector();
+	void compute_detection(Mat img);
+	vector<vector<Point>> get_points();
+	void display_points();
 };
 
 #endif // HAAR_DETECTOR_HPP

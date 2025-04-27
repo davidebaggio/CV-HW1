@@ -118,14 +118,12 @@ vector<vector<Point>> orb_detector::get_points(float perc)
 	vector<vector<Point>> best_points;
 	for (size_t j = 0; j < points.size(); j++)
 	{
-		cout << points[j].size() << endl;
 		int max_index = points[j].size() * perc;
 		vector<Point> best_single_vector;
 		for (int i = 0; i < max_index; i++)
 		{
 			best_single_vector.push_back(points[j][i]);
 		}
-		cout << best_single_vector.size() << endl;
 		best_points.push_back(best_single_vector);
 	}
 	return best_points;
