@@ -16,34 +16,45 @@ using namespace filesystem;
 
 class sift_detector
 {
-private:
-	Mat img_test;
+	private:
 
-	Ptr<SIFT> sift;
+		// Test image
+		Mat img_test;
 
-	string pattern = R"(view.*color\.png)";
-	vector<string> models_path = {
-		"data/004_sugar_box/models",
-		"data/006_mustard_bottle/models",
-		"data/035_power_drill/models"};
+		//SIFT Detector
+		Ptr<SIFT> sift;
 
-	vector<vector<Point>> points = vector<vector<cv::Point>>(3);
-	vector<string> winning_file_names = vector<string>(3);
-	vector<vector<Mat>> model_descriptors = vector<vector<Mat>>(3);
-	;
+		// Regex pattern to match the model images
+		string pattern = R"(view.*color\.png)";
 
-	void get_model_descriptors();
-	void optimize_image(Mat &src, bool isImg_test);
-	void save_points(vector<cv::DMatch> &matches, vector<KeyPoint> &img_kpt, int category);
-	vector<DMatch> get_matches(const Mat &model_desc, const Mat &img_desc);
+		// Different directories for the models
+		vector<string> models_path = {
+			"data/004_sugar_box/models",
+			"data/006_mustard_bottle/models",
+			"data/035_power_drill/models"};
 
-public:
-	sift_detector();
-	vector<vector<Point>> get_points();
-	vector<vector<Point>> get_points(float perc);
-	void compute_detection(Mat img_test);
-	void display_points();
-	void display_points(float perc);
+
+		// Vector of points for each model
+		// 0: sugar, 1: mustard, 2: drill
+		vector<vector<Point>> points = vector<vector<cv::Point>>(3);
+
+		// Vector descriptors for each model
+		// 0: sugar, 1: mustard, 2: drill
+		vector<vector<Mat>> model_descriptors = vector<vector<Mat>>(3);
+		
+		// Helper functions
+		void get_model_descriptors();
+		void optimize_image(Mat &src, bool isImg_test);
+		void save_points(vector<cv::DMatch> &matches, vector<KeyPoint> &img_kpt, int category);
+		vector<DMatch> get_matches(const Mat &model_desc, const Mat &img_desc);
+
+	public:
+		sift_detector();
+		vector<vector<Point>> get_points();
+		vector<vector<Point>> get_points(float perc);
+		void compute_detection(Mat img_test);
+		void display_points();
+		void display_points(float perc);
 };
 
 #endif // SIFT_DETECTOR_HPP
