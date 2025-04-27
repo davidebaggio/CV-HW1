@@ -11,13 +11,13 @@ orb_detector::orb_detector()
 	{
 		try
 		{
-			regex regexPattern(pattern);
+			regex regex_pattern(pattern);
 
 			Mat src;
 			Mat mask;
 
 			int max_matches = 0;
-			string bestMatchFileName;
+			string best_match_fileName;
 			Mat best_descriptors;
 			vector<KeyPoint> best_keypoints;
 			vector<DMatch> winning_matches;
@@ -35,10 +35,10 @@ orb_detector::orb_detector()
 
 					
 					// Check if the file name matches the regex pattern
-					if (std::regex_match(fileName, regexPattern))
+					if (std::regex_match(fileName, regex_pattern))
 					{
-						std::string fullFileName = models_path[i] + "/" + entry.path().filename().string();
-						src = imread(fullFileName);
+						std::string full_file_name = models_path[i] + "/" + entry.path().filename().string();
+						src = imread(full_file_name);
 						mask = imread(models_path[i] + "/" + file_mask, IMREAD_GRAYSCALE);
 
 						if (src.empty() || mask.empty())
@@ -170,7 +170,7 @@ void orb_detector::compute_detection(Mat img)
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		int max_matches = 0;
-		string bestMatchFileName;
+		string best_match_fileName;
 		Mat best_descriptors;
 		vector<DMatch> winning_matches;
 		vector<Point> medians;
