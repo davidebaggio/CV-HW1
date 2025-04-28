@@ -2,7 +2,7 @@
 
 % Packages for formatting and layout
 \usepackage{geometry}  % Adjust margins
-\geometry{margin=0.7in}
+\geometry{margin=0.5in}
 \usepackage{setspace}  % For line spacing
 \usepackage{graphicx, wrapfig}
 \graphicspath{ {./assets/} }
@@ -69,7 +69,16 @@ a \textbf{test\_images} folder containing the test images; a \textbf{models} fol
 For object detection and localization, we implemented and compared three different methods: Haar Cascades, SIFT-based matching, and ORB-based matching. We independently implemented the three methods and combined their results. Each method returns a set of \textbf{keypoints} representing the features points of the objects we are trying to detect. Below are some additional details on how we implemented each of the three detectors.
 
 \subsubsection*{Haar Cascade Classifer}
-    Aggiungere qui qualche dettaglio su Haar
+    Cascade classifiers in OpenCV, such as Haar cascades, are trained using a sequence of increasingly complex stages. Each stage uses simple features (Haar-like features) extracted from images. Haar features are rectangular regions over which pixel intensity sums are computed quickly via an integral image. The difference between these sums (such as the difference between a bright and dark region) captures characteristic patterns like edges, lines, and center-surround contrasts.
+
+    Training a custom Haar cascade is done using the \texttt{opencv\_traincascade} tool. A typical training command is:
+
+    \begin{lstlisting}[]
+opencv_traincascade -data object_cascade -vec positives.vec -bg negative.txt -numPos 29 -numNeg 100 -w 24 -h 24 -maxFalseAlarmRate 0.3 -minHitRate 0.999 -numStages 8
+    \end{lstlisting}
+
+    Here, \texttt{-data} specifies the output directory, \texttt{-vec} provides positive samples, \texttt{-bg} lists negative images, and other parameters control training size and complexity.
+
 \subsubsection*{ORB-Based Feature Matching}
     Initially it calculates and stores the feature descriptors of the object models. These descriptors are then used to compare with those of the test image using a \textbf{BFMatcher with Hamming distance} to find matches. For each searched object, the model with the most matches to the test image is considered the best, and the corresponding keypoints are returned for object identification. Finally, the keypoints are ranked based on the distance between the image descriptors and the test descriptors. This ensures that the best keypoints are ordered and can be filtered according to the \textbf{specified percentage}. The \textbf{default parameters} were kept for the initial ORB configuration. This decision was made because we tested several parameter values but did not observe any significant improvement in performance.
 
@@ -83,15 +92,9 @@ For object detection and localization, we implemented and compared three differe
 The keypoints identified by the different methods were grouped together. Given the abundance of false positives in many object features, and the fact that the three methods produced an unbalanced number of keypoints, we decided to apply a percentage threshold for each method to filter their output keypoints. We conducted several experiments on the percentage thresholds and ultimately selected the configuration that gave the best results. We kept the output percentage of the best keypoints as follows: \textbf{50\% from the Haar detector, 100\% from ORB, and 50\% from SIFT}.
 
 \subsubsection*{Bounding Box Drawing for Object Identification Using Keypoints}
-Qui spiegare come sono state scelte le regioni in cui fare i rettangoli
+After applying all the methods already explained, multiple candidate detections often appear, especially in noisy scenes. To localize the most probable area where detections are dense, the DBSCAN (Density-Based Spatial Clustering of Applications with Noise) algorithm can be applied. DBSCAN groups nearby points based on two parameters: \texttt{eps} (maximum neighborhood radius) and \texttt{minPts} (minimum number of points to form a cluster). It identifies clusters of high density without requiring the number of clusters in advance.
 
-
-
-
-
-
-
-
+The largest cluster obtained by DBSCAN can be bounded by a rectangle, representing the area of maximum detection density. This approach is particularly useful for refining detection results and reducing false positives in crowded scenes.
 
 \section*{Results}
 The performance of the system was evaluated using two main metrics:
@@ -99,9 +102,6 @@ The performance of the system was evaluated using two main metrics:
     \item \textbf{Mean Intersection over Union (mIoU)}: the average IoU computed for each object category. \\The detection system achieved a mean IoU of \textbf{99\%}.  // Ho messo un valore a caso dopo lo sistemiamo
     \item \textbf{Detection accuracy}: the percentage of correctly recognized instances, considering a prediction correct if the IoU between the predicted and the ground truth bounding box exceeds 0.5. The detection accuracy was \textbf{99\%}.
 \end{itemize}
-
-
-
 
 \section*{Difficulties Encoutered and Critical Discussion}
 During the development phase, several critical issues were encountered.\\

@@ -78,7 +78,7 @@ vector<Point> sample_vector_by_color(Mat img, vector<Point> points, bool around,
  */
 vector<Point> sample_vector_by_weights(vector<vector<Point>> points, vector<double> weights)
 {
-	srand(time(NULL));
+	srand(225472387358296);
 	if (points.size() != weights.size())
 	{
 		cout << "[ERROR]: points and weights must have the same size" << endl;

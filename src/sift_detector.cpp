@@ -3,7 +3,7 @@
 
 void sift_detector::get_model_descriptors()
 {
-	
+
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		try
@@ -37,7 +37,7 @@ void sift_detector::get_model_descriptors()
 						Mat model_desc;
 						vector<KeyPoint> model_kpt;
 
-						optimize_image(model, false);
+						optimize_image(model);
 
 						sift->detect(model, model_kpt, mask);
 						sift->compute(model, model_kpt, model_desc);
@@ -65,7 +65,6 @@ void sift_detector::optimize_image(Mat &src)
 	src = img_equalized.clone();
 }
 
-
 void sift_detector::save_points(vector<DMatch> &matches, vector<KeyPoint> &img_kpt, int category)
 {
 	vector<Point> matches_points;
@@ -85,13 +84,13 @@ void sift_detector::save_points(vector<DMatch> &matches, vector<KeyPoint> &img_k
 vector<DMatch> sift_detector::get_matches(const Mat &model_desc, const Mat &img_desc)
 {
 	FlannBasedMatcher matcher;
-	vector<vector<DMatch>> knn_matches;						
-	matcher.knnMatch(model_desc, img_desc, knn_matches, 2); 
+	vector<vector<DMatch>> knn_matches;
+	matcher.knnMatch(model_desc, img_desc, knn_matches, 2);
 
 	vector<DMatch> good_matches;
 	for (const auto &m : knn_matches)
 	{
-		if (m.size() == 2 && m[0].distance < 0.82f * m[1].distance)
+		if (m.size() == 2 && m[0].distance < 0.999f * m[1].distance)
 		{
 			good_matches.push_back(m[0]);
 		}
@@ -111,7 +110,7 @@ void sift_detector::compute_detection(Mat img)
 	img_test = img;
 
 	Mat img_opt = img_test.clone();
-	optimize_image(img_opt, true);
+	optimize_image(img_opt);
 
 	vector<KeyPoint> img_kpt;
 	Mat img_desc;
@@ -167,12 +166,10 @@ void sift_detector::compute_detection(Mat img)
 	cout << "Best matches found from SIFT detector\n";
 }
 
-
 vector<vector<Point>> sift_detector::get_points()
 {
 	return points;
 }
-
 
 vector<vector<Point>> sift_detector::get_points(float perc)
 {
@@ -190,20 +187,18 @@ vector<vector<Point>> sift_detector::get_points(float perc)
 	return best_points;
 }
 
-
 void sift_detector::display_points()
 {
 	display_points(1.0);
 }
 
-
 void sift_detector::display_points(float perc)
 {
 
 	vector<Mat> mat_matches = vector<Mat>(3);
-	mat_matches[0] = img_test.clone(); 
-	mat_matches[1] = img_test.clone(); 
-	mat_matches[2] = img_test.clone(); 
+	mat_matches[0] = img_test.clone();
+	mat_matches[1] = img_test.clone();
+	mat_matches[2] = img_test.clone();
 
 	vector<vector<Point>> pp = get_points(perc);
 

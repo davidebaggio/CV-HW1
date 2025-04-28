@@ -1,1 +1,5 @@
 .vscode
+
+report/main.*
+!main.tex
+!main.pdf
