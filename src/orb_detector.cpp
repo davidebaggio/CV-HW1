@@ -1,12 +1,10 @@
 // Created by: Zoren Martinez mat. 2123873
 #include "orb_detector.hpp"
 
-// Constructor
-// Initializes the ORB detector and reads the model images from the dataset folders
+
 orb_detector::orb_detector()
 {
 	
-	// Reads every model of the objects from the the dataset folders
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		try
@@ -33,8 +31,6 @@ orb_detector::orb_detector()
 					string file_mask = file_name.substr(file_name.find_last_of("/") + 1);
 					file_mask = file_mask.substr(0, file_mask.find_last_of("_")) + "_mask.png";
 
-					
-					// Check if the file name matches the regex pattern
 					if (std::regex_match(file_name, regex_pattern))
 					{
 						std::string full_file_name = models_path[i] + "/" + entry.path().filename().string();
@@ -46,9 +42,7 @@ orb_detector::orb_detector()
 							std::cerr << "[ERROR]: Could not open image file: " << file_name << std::endl;
 							continue;
 						}
-
-
-						// Compute all the descriptors for the each model images of the dataset
+						
 						Mat descriptors_1;
 						vector<KeyPoint> keypoints_1;
 
