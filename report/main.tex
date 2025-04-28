@@ -10,8 +10,9 @@
 \usepackage{hyperref}  % For hyperlinks
 \usepackage{enumitem}  % For custom lists
 \usepackage{listings}
-\usepackage{subfigure}
+\usepackage{subcaption}
 \usepackage{xcolor}
+
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -103,8 +104,42 @@ The performance of the system was evaluated using two main metrics:
 
 
 \section*{Difficulties Encoutered and Critical Discussion}
+During the development phase, several critical issues were encountered.\\
+For the ORB detector, a major problem was that the logo printed on the sugar box attracted a large number of keypoints, even when compared against models that were not the sugar box itself. This led to incorrect matches and a high rate of false positives.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{img/power_drill matches_screenshot_28.04.2025.png}
+    \caption{ORB: While searching for the power drill, match points are "stolen" by the sugar box.}
+    \label{fig:prima}
+\end{figure}
+\\\\
+Regarding the SIFT detector, difficulties were mainly observed in recognizing the mustard bottle and the power drill. In both cases, very few keypoints were detected, and the mustard bottle could only be reliably recognized when seen from a frontal view. On the other hand, the sugar box generally provided a sufficient number of keypoints, but again with a significant number of false matches.
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/SiFT_PreLowe.png}
+        \caption{SIFT: Pre-Lowe}
+        \label{fig:PreLowe}
+    \end{subfigure}
+    \hspace{0.10\textwidth}
+    \begin{subfigure}{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/SIFT_PostLowe.png}
+        \caption{SIFT: Post-Lowe}
+        \label{fig:PostLowe}
+    \end{subfigure}
+    \caption{Keypoint Matches: Before vs. After Lowe’s Ratio Test}
+    \label{fig:confronto}
+\end{figure}
+\\\\
+To address these issues, three different types of filters \textbf{Bilateral}, \textbf{Gaussian}, and \textbf{Median} were tested to improve the quality of the test images. Although they slightly improved the detection performance for the power drill by eliminating some false positives, they significantly blurred the features of the sugar box, drastically reducing the number of detectable keypoints. For this reason, the use of these filters was ultimately discarded.
+\\\\
+After introducing the Lowe's Ratio Test, which effectively reduced false positives, a further solution was attempted: filtering the keypoints detected by ORB by keeping only those located near the keypoints identified by SIFT. Since SIFT keypoints were more reliable, the goal was to increase the density of ORB keypoints in the regions where the objects were likely located. However, this approach also had its limitations. The number of keypoints found by SIFT was too small, resulting in large distances between points. As a consequence, even after enriching the point cloud with ORB keypoints, the final bounding boxes remained too small and did not accurately cover the objects.
 
 \section*{Conclusions}
-
+In conclusion, the final results are not what we initially expected at the start of the project. The detection accuracy is very low, especially for certain objects, such as the mustard bottle, where it is almost zero. The detector performs slightly better with the drill and particularly with the sugar box, but the results are still far from exceptional. We tested several solutions, but this is the best outcome we were able to achieve. We suspect that the poor performance may be due to the quality of the dataset.\\
+\textbf{QUI DA AGGIUNGERE LA MOTIVAZIONE DEL PERCHE' IL DATASET FA SCHIFO}\\
+Although the results are not as expected, the project has provided valuable insights for future improvements. In future work, focusing on improving the dataset and trying different detection methods may lead to better performance. With better data and techniques, we believe the system's accuracy can be improved
 
 \end{document}
