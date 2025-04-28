@@ -90,11 +90,26 @@ void sift_detector::save_points(vector<DMatch> &matches, vector<KeyPoint> &img_k
 // Helper function to get matches between an image model descriptors and image test descriptors
 vector<DMatch> sift_detector::get_matches(const Mat &model_desc, const Mat &img_desc)
 {
-	BFMatcher matcher(NORM_L2, true);
+	/* BFMatcher matcher(NORM_L2, true);
 	vector<DMatch> matches;
 	matcher.match(model_desc, img_desc, matches);
 
-	return matches;
+	return matches; */
+	FlannBasedMatcher matcher;
+	vector<vector<DMatch>> knn_matches;						// Vettore di vettori per knnMatch
+	matcher.knnMatch(model_desc, img_desc, knn_matches, 2); // k=2 per il test di Lowe
+
+	// Lowe's Ratio Test
+	vector<DMatch> good_matches;
+	for (const auto &m : knn_matches)
+	{
+		if (m.size() == 2 && m[0].distance < 1.0f * m[1].distance)
+		{
+			good_matches.push_back(m[0]);
+		}
+	}
+
+	return good_matches;
 }
 
 // Constructor
