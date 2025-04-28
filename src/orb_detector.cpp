@@ -42,7 +42,7 @@ orb_detector::orb_detector()
 							std::cerr << "[ERROR]: Could not open image file: " << file_name << std::endl;
 							continue;
 						}
-						
+
 						Mat descriptors_1;
 						vector<KeyPoint> keypoints_1;
 
@@ -68,7 +68,6 @@ orb_detector::orb_detector()
 	}
 }
 
-// Helper function to compute the median of a vector of doubles
 double orb_detector::compute_median(vector<double> values)
 {
 	sort(values.begin(), values.end());
@@ -83,7 +82,7 @@ double orb_detector::compute_median(vector<double> values)
 	}
 }
 
-// Helper function to get matches between an image model descriptors and image test descriptors
+
 vector<DMatch> orb_detector::get_matches(const Mat &model_descriptors, const Mat &test_descriptors)
 {
 	BFMatcher matcher(NORM_HAMMING, true);
@@ -93,7 +92,6 @@ vector<DMatch> orb_detector::get_matches(const Mat &model_descriptors, const Mat
 	return matches;
 }
 
-// Helper function to save the points of the best matches
 void orb_detector::save_points(vector<DMatch> matches, vector<KeyPoint> test_keypoints, int category)
 {
 	vector<Point> matches_points;
@@ -109,13 +107,13 @@ void orb_detector::save_points(vector<DMatch> matches, vector<KeyPoint> test_key
 	points[category] = matches_points;
 }
 
-// Returns the points
+
 vector<vector<Point>> orb_detector::get_points()
 {
 	return points;
 }
 
-// Returns the points with a percentage of the best matches
+
 vector<vector<Point>> orb_detector::get_points(float perc)
 {
 
@@ -139,8 +137,7 @@ vector<vector<Point>> orb_detector::get_points(float perc)
 	return best_points;
 }
 
-// Computes the detection between the model descriptors and the test image descriptors
-// The test image is passed as a parameter
+
 void orb_detector::compute_detection(Mat img)
 {
 	this->test = img;
@@ -150,7 +147,7 @@ void orb_detector::compute_detection(Mat img)
 	vector<KeyPoint> test_keypoints;
 	Mat test_descriptors;
 
-	// Compute the descriptors for the test image
+	
 	orb->detect(test, test_keypoints);
 	orb->compute(test, test_keypoints, test_descriptors);
 
@@ -160,7 +157,7 @@ void orb_detector::compute_detection(Mat img)
 		return;
 	}
 
-	// For each model image, get the best match, which are the most numerous matches from a single image model
+	
 	for (int i = 0; i < models_path.size(); i++)
 	{
 		int max_matches = 0;
@@ -185,7 +182,7 @@ void orb_detector::compute_detection(Mat img)
 				continue;
 			}
 			
-			// The maximum number of matches is considered the best match
+			
 			if (matches.size() > max_matches)
 			{
 				winning_matches = matches;
@@ -200,7 +197,7 @@ void orb_detector::compute_detection(Mat img)
 			continue;
 		}
 
-		// Sort matches by distance to prioritize the most reliable matches (smallest distance first)
+		
 		sort(winning_matches.begin(), winning_matches.end(), [](const DMatch &a, const DMatch &b)
 			 { return a.distance < b.distance; });
 		
@@ -209,13 +206,11 @@ void orb_detector::compute_detection(Mat img)
 	cout << "Best matches found from ORB detector\n";
 }
 
-// Displays all the points of the best matches
 void orb_detector::display_points()
 {
 	display_points(1.0);
 }
 
-// Displays the points of the best matches, parameter perc is the percentage of the best matches to be displayed
 void orb_detector::display_points(float perc)
 {
 
