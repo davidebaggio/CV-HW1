@@ -1,0 +1,110 @@
+\documentclass[10.5pt,a4paper]{article}
+
+% Packages for formatting and layout
+\usepackage{geometry}  % Adjust margins
+\geometry{margin=0.7in}
+\usepackage{setspace}  % For line spacing
+\usepackage{graphicx, wrapfig}
+\graphicspath{ {./assets/} }
+\usepackage{amsmath}   % For mathematical expressions
+\usepackage{hyperref}  % For hyperlinks
+\usepackage{enumitem}  % For custom lists
+\usepackage{listings}
+\usepackage{subfigure}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+% Title information
+\title{Computer Vision Mid-Term Project}
+\author{Baggio Davide 2122547 \\ Martinez Zoren 2123873 \\ Pivotto Francesco 2158296}
+\date{}
+
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd{\@maketitle}{\null\vskip 2em}{}{}{}
+\makeatother
+
+\begin{document}
+
+% Title Page
+\maketitle
+
+\section*{Introduction}
+
+The goal of this project was to develop, using exclusively the \texttt{OpenCV} library, a detection system capable of locating and delimiting known instances of three objects in input images by means of a bounding box.
+\\\\
+For object recognition (sugar box, mustard bottle, and power drill), a subset of the public \textbf{YCB Video} dataset was used, which provides for each object:
+a \textbf{test\_images} folder containing the test images; a \textbf{models} folder with 60 different views and the corresponding binary segmentation masks; a \textbf{labels} folder containing ground truth annotations for object localization.
+
+\\
+
+\section*{Methodology}
+
+For object detection and localization, we implemented and compared three different methods: Haar Cascades, SIFT-based matching, and ORB-based matching. We independently implemented the three methods and combined their results. Each method returns a set of \textbf{keypoints} representing the features points of the objects we are trying to detect. Below are some additional details on how we implemented each of the three detectors.
+
+\subsubsection*{Haar Cascade Classifer}
+    Aggiungere qui qualche dettaglio su Haar
+\subsubsection*{ORB-Based Feature Matching}
+    Initially it calculates and stores the feature descriptors of the object models. These descriptors are then used to compare with those of the test image using a \textbf{BFMatcher with Hamming distance} to find matches. For each searched object, the model with the most matches to the test image is considered the best, and the corresponding keypoints are returned for object identification. Finally, the keypoints are ranked based on the distance between the image descriptors and the test descriptors. This ensures that the best keypoints are ordered and can be filtered according to the \textbf{specified percentage}. The \textbf{default parameters} were kept for the initial ORB configuration. This decision was made because we tested several parameter values but did not observe any significant improvement in performance.
+
+\subsubsection*{SIFT-Based Feature Matching}
+    During the creation of the detector, the feature descriptors for all object models are computed and stored.\\
+    The test image is then preprocessed by converting it to grayscale and applying histogram equalization, which is also performed on the model images to ensure consistency.\\
+    Next, matches between the feature descriptors of the test image and those of the models are computed using a \textbf{BFMatcher} with \textbf{KNN matching}. To reduce false positives, the \textbf{Lowe’s Ratio test} is applied.\\
+    For each object, the model with the most matches is selected, and the corresponding keypoints are returned for identification. Finally, the keypoints are ranked based on the distance between the image and model descriptors, ensuring the best keypoints are ordered and can be filtered based on the specified percentage.
+
+\subsubsection*{Keypoint Aggregation}
+The keypoints identified by the different methods were grouped together. Given the abundance of false positives in many object features, and the fact that the three methods produced an unbalanced number of keypoints, we decided to apply a percentage threshold for each method to filter their output keypoints. We conducted several experiments on the percentage thresholds and ultimately selected the configuration that gave the best results. We kept the output percentage of the best keypoints as follows: \textbf{50\% from the Haar detector, 100\% from ORB, and 50\% from SIFT}.
+
+\subsubsection*{Bounding Box Drawing for Object Identification Using Keypoints}
+Qui spiegare come sono state scelte le regioni in cui fare i rettangoli
+
+
+
+
+
+
+
+
+
+\section*{Results}
+The performance of the system was evaluated using two main metrics:
+\begin{itemize}
+    \item \textbf{Mean Intersection over Union (mIoU)}: the average IoU computed for each object category. \\The detection system achieved a mean IoU of \textbf{99\%}.  // Ho messo un valore a caso dopo lo sistemiamo
+    \item \textbf{Detection accuracy}: the percentage of correctly recognized instances, considering a prediction correct if the IoU between the predicted and the ground truth bounding box exceeds 0.5. The detection accuracy was \textbf{99\%}.
+\end{itemize}
+
+
+
+
+\section*{Difficulties Encoutered and Critical Discussion}
+
+\section*{Conclusions}
+
+
+\end{document}
